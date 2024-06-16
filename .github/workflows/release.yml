@@ -16,4 +16,4 @@ jobs:
     - uses: ncipollo/release-action@v1
       with:
         artifacts: "release.tar.gz,foo/*"
-        bodyFile: "body.md"
+        bodyFile: "README.adoc"
