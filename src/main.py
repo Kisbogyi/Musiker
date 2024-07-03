@@ -6,6 +6,7 @@ from threading import Thread
 import yt_dlp as youtube_dl
 from enum import Enum
 import uuid
+import datetime
 
 class DownloadStatus(Enum):
     NOT_STARTED = 1
@@ -56,9 +57,14 @@ class Queue:
 
 class Player:
     paused: bool = True
-    def __init__(self) -> None:
+    def __init__(self, logger) -> None:
         self.player = mpv.MPV(ytdl=True, input_default_bindings=True, input_vo_keyboard=True, vid=False) 
         self.que = Queue()
+        self.logger = logger
+
+    async def add_mu(self, musiks):
+        for musik in musiks:
+            self.que.add(musik)
 
     async def play(self):
         self.paused = False
@@ -67,18 +73,23 @@ class Player:
 
     def play2(self):
         while self.que.len() >= 1 and not self.paused:
-            print(self.paused)
-            print(self.que)
-            current = self.que.pop_next()
-            self.player.play(current.get_playable())
-            next = self.que.get_next()
-            if next != None:
-                self.player_thread = Thread(target=self.cache_song, args=[next])
-                self.player_thread.start()
-            self.player.wait_for_playback()
-            print("start-cleanup")
-            self.cleanup(current.path)
-            print(self.que.len())
+            try:
+                name = self.que.get_next().url
+                self.logger.info(f"Started playing {name} at: {datetime.datetime.now()}")
+                current = self.que.pop_next()
+                self.player.play(current.get_playable())
+                self.player.wait_for_playback()
+                self.logger.info(f"Stopped playing  {name} at: {datetime.datetime.now()}")
+            except Exception as e:
+                self.logger.error(f"=================================================================\nError at: {e}\n ===========================================================" )
+            #next = self.que.get_next()
+            #if next != None:
+            #    self.player_thread = Thread(target=self.cache_song, args=[next])
+            #    self.player_thread.start()
+            #self.player.wait_for_playback()
+            #print("start-cleanup")
+            #self.cleanup(current.path)
+            #print(self.que.len())
 
     async def add_to_que(self, url):
         self.que.add(url)
@@ -100,6 +111,7 @@ class Player:
             'outtmpl': path
         }
 
+        # Thre can be a race condition here
         song.path = f"{path}.part"
         song.status = DownloadStatus.STARTED
         print(song.url)
@@ -107,6 +119,7 @@ class Player:
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             ydl.download([song.url])
         print("download finished")
+        # Here can be a race condition
         song.status = DownloadStatus.FINISHED
         song.path = f"{path}.mp3"
 
