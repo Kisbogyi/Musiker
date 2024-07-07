@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/python3
 import discord
 from constants import BOT_TOKEN
 import main
