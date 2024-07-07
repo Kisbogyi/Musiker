@@ -1,49 +1,39 @@
 #!/usr/bin/bash
-from typing import List
 import discord
-from discord.ext.commands import bot
 from constants import BOT_TOKEN
 import main
-from discord import app_commands, message
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(filename='musiker.log', encoding="utf-8", level=logging.DEBUG)
+logging.basicConfig(filename="musiker.log", encoding="utf-8", level=logging.DEBUG)
 
-intetns = discord.Intents.default()
-intetns.message_content = True
+bot = discord.Bot()
 
-client = discord.Client(intents=intetns)
-tree = app_commands.CommandTree(client)
+# bot = discord.Client(intents=intetns)
 player = main.Player(logger=logger)
 
-@client.event
-async def on_ready():
-    await tree.sync(guild=discord.Object(id=824172801644036117))
-    logger.info(f"Logged in as {client.user}")
 
-@tree.command(
-    name="hello",
-    description="desc",
-    guild=discord.Object(id=824172801644036117)
-)
+@bot.event
+async def on_ready():
+    logger.info(f"Logged in as {bot.user}")
+
+
+@bot.command(description="test command")
 async def hello(interaction: discord.Interaction, _: str) -> None:
     await interaction.response.send_message("Hello", ephemeral=True)
 
-@tree.command(
-    name="stop",
+
+@bot.command(
     description="Stops the current song",
-    guild=discord.Object(id=824172801644036117)
 )
 async def stop(interaction: discord.Interaction) -> None:
     player.stop()
     logger.info("stopping")
     await interaction.response.send_message("playlist stopped", ephemeral=True)
 
-@tree.command(
-    name="play",
+
+@bot.command(
     description="Starts the current playlist",
-    guild=discord.Object(id=824172801644036117)
 )
 async def start(interaction: discord.Interaction) -> None:
     try:
@@ -53,44 +43,53 @@ async def start(interaction: discord.Interaction) -> None:
     except Exception as e:
         logger.error(e)
 
-@tree.command(
-    name="list",
+
+@bot.command(
     description="Lists the songs that are in the playlist",
-    guild=discord.Object(id=824172801644036117)
 )
 async def list(interaction: discord.Interaction) -> None:
     await interaction.response.send_message(player.que, ephemeral=True)
 
 
-@tree.command(
-    name="add",
+@bot.command(
     description="Add a song to the playlist",
-    guild=discord.Object(id=824172801644036117)
 )
 async def add(interaction: discord.Interaction, music: str) -> None:
     await player.add_to_que(music)
     logger.info("music added")
-    await interaction.response.send_message(f"{music} was added to playlist", ephemeral=True)
+    await interaction.response.send_message(
+        f"{music} was added to playlist", ephemeral=True
+    )
 
 
-@tree.command(
-    name="status",
+@bot.command(
     description="ask for status of the player",
-    guild=discord.Object(id=824172801644036117)
 )
 async def status(interaction: discord.Interaction):
     logger.info("status asked")
     await interaction.response.send_message(f"Paused?: {player.paused}", ephemeral=True)
 
-@tree.command(
-    name="add_multiple",
+
+@bot.command(
     description="ask for status of the player",
-    guild=discord.Object(id=824172801644036117)
 )
 async def add_multiple(interaction: discord.Interaction, m: str):
     logger.info("status asked")
     for musik in m.strip().split(","):
         await player.add_to_que(musik)
     await interaction.response.send_message(f"Paused?: {player.paused}", ephemeral=True)
-client.run(BOT_TOKEN)
 
+
+@bot.command(description="Clears the playlist")
+async def clear(interaction):
+    await player.clear_songs()
+    await interaction.response.send_message("Playlist cleared", ephemeral=True)
+
+
+@bot.command(description="Skip currently playing music")
+async def skip(interaction):
+    await player.skip()
+    await interaction.response.send_message("Skipped music")
+
+
+bot.run(BOT_TOKEN)
