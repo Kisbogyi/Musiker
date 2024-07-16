@@ -1,0 +1,13 @@
+[Unit]
+Description=Musik playing bot for SCH-120
+After=network.target
+
+[Service]
+ExecStart=/home/bandi/musiker/run.sh
+Type=notify
+Restart=always
+
+
+[Install]
+WantedBy=default.target
+RequiredBy=network.target
