@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 from typing import Optional
-from discord import player
 import mpv
 from threading import Thread
 import yt_dlp as youtube_dl
@@ -99,14 +98,6 @@ class Player:
                 self.logger.error(
                     f"=================================================================\nError at: {e}\n ==========================================================="
                 )
-            # next = self.que.get_next()
-            # if next != None:
-            #    self.player_thread = Thread(target=self.cache_song, args=[next])
-            #    self.player_thread.start()
-            # self.player.wait_for_playback()
-            # print("start-cleanup")
-            # self.cleanup(current.path)
-            # print(self.que.len())
 
     async def add_to_que(self, url):
         self.que.add(url)

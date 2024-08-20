@@ -57,6 +57,9 @@ async def list(interaction: discord.Interaction) -> None:
 async def add(interaction: discord.Interaction, music: str) -> None:
     await player.add_to_que(music)
     logger.info("music added")
+    if len(player.que) == 0:
+        logger.info("playlist started")
+        player.play()
     await interaction.response.send_message(
         f"{music} was added to playlist", ephemeral=True
     )
