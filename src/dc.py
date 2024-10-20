@@ -10,17 +10,12 @@ logging.basicConfig(filename="musiker.log", encoding="utf-8", level=logging.DEBU
 bot = discord.Bot()
 
 # bot = discord.Client(intents=intetns)
-player = main.Player(logger=logger)
+player = main.Player()
 
 
 @bot.event
 async def on_ready():
     logger.info(f"Logged in as {bot.user}")
-
-
-@bot.command(description="test command")
-async def hello(interaction: discord.Interaction, _: str) -> None:
-    await interaction.response.send_message("Hello", ephemeral=True)
 
 
 @bot.command(
@@ -38,7 +33,7 @@ async def stop(interaction: discord.Interaction) -> None:
 async def start(interaction: discord.Interaction) -> None:
     try:
         logger.info("playlist started")
-        await player.play()
+        player.play()
         await interaction.response.send_message("Playlist started!", ephemeral=True)
     except Exception as e:
         logger.error(e)
@@ -48,51 +43,29 @@ async def start(interaction: discord.Interaction) -> None:
     description="Lists the songs that are in the playlist",
 )
 async def list(interaction: discord.Interaction) -> None:
-    await interaction.response.send_message(player.que, ephemeral=True)
+    await interaction.response.send_message(player.playlist, ephemeral=True)
 
 
 @bot.command(
     description="Add a song to the playlist",
 )
 async def add(interaction: discord.Interaction, music: str) -> None:
-    await player.add_to_que(music)
+    player.add(music)
     logger.info("music added")
-    if len(player.que) == 0:
-        logger.info("playlist started")
-        player.play()
     await interaction.response.send_message(
         f"{music} was added to playlist", ephemeral=True
     )
 
-
-@bot.command(
-    description="ask for status of the player",
-)
-async def status(interaction: discord.Interaction):
-    logger.info("status asked")
-    await interaction.response.send_message(f"Paused?: {player.paused}", ephemeral=True)
-
-
-@bot.command(
-    description="ask for status of the player",
-)
-async def add_multiple(interaction: discord.Interaction, m: str):
-    logger.info("status asked")
-    for musik in m.strip().split(","):
-        await player.add_to_que(musik)
-    await interaction.response.send_message(f"Paused?: {player.paused}", ephemeral=True)
-
-
 @bot.command(description="Clears the playlist")
 async def clear(interaction):
-    await player.clear_songs()
+    player.clear()
     await interaction.response.send_message("Playlist cleared", ephemeral=True)
 
 
 @bot.command(description="Skip currently playing music")
 async def skip(interaction):
-    await player.skip()
-    await interaction.response.send_message("Skipped music")
+    player.skip()
+    await interaction.response.send_message("Skipped music", ephemeral=True)
 
 
 bot.run(BOT_TOKEN)
