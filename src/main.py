@@ -1,5 +1,6 @@
-#!/bin/python3
-from threading import Thread
+#!/usr/bin/venv python3
+
+from threading import Thread, Event
 import mpv
 
 import yt_dlp
@@ -60,33 +61,45 @@ def get_links(url):
 
 class Player:
     # Playlist contains urls from playlists and videos, play will play them with generator
+    # TODO: threads can only be started once
+    # skip response elhal
+    #push first
+    # stop is not pouse with mpv
+    playerStarted: Event = Event()
     playlist = []
     def __init__(self):
         self.player =  mpv.MPV(ytdl=True, input_vo_keyboard=True, vid=False)
         def __play():
-            while len(self.playlist) != 0:
+            while True:
+                self.playerStarted.wait()
+                if len(self.playlist) == 0:
+                    self.playerStarted.clear()
+                    continue
                 video = self.playlist.pop(0)
                 for music in get_links(video):
                     print(f"playing {music}")
                     self.player.play(music)
                     self.player.wait_for_playback()
  
-        self.thread = Thread(target=__play)
+
+        self.playingThread: Thread = Thread(target=__play)
+        self.playingThread.start()
 
     def play(self):
-        # Create the dunction that the thread can acess, but nobody else can
-        self.thread.start()
+        self.playerStarted.set()
 
     def add(self, url):
         self.playlist.append(url)
-        if not self.thread.is_alive():
-            self.play()        
+        self.playerStarted.set()
 
     def stop(self):
-        self.player.stop()
+        # TODO: Make mpv pause
+        #self.player.keydown()
+        #self.player.__setattr__("pause", not self.player.__getattr__("pause"))
+        self.player.command("cycle", "pause")
 
-    def start(self):
-        self.play()
+        #self.playerStarted.clear()
+        #self.player.stop(keep_playlist=True)
 
     def skip(self):
         self.player.stop()
@@ -94,3 +107,7 @@ class Player:
 
     def clear(self):
         self.playlist.clear()
+
+    def set_property(self, name, value):
+        """Set the value of property `name`.
+        """
