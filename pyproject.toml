@@ -1,0 +1,11 @@
+[project]
+name = "musiker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.adoc"
+requires-python = "==3.12.3"
+dependencies = [
+    "mpv>=1.0.7",
+    "py-cord>=2.6.1",
+    "yt-dlp>=2024.12.23",
+]
